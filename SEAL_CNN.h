@@ -15,8 +15,8 @@
 using namespace seal;
 using namespace std;
 
-vector<Ciphertext> cnnCalMnist(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decrptor);
-vector<Ciphertext> cnnCalMnist_slim(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decrptor);
+vector<Ciphertext> cnnCalMnist(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decrptor, string path);
+vector<Ciphertext> cnnCalMnist_slim(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decrptor, string path);
 
 vector<vector<vector<vector<Plaintext> > > > convertTensor(vector<vector<double> > &mat, FractionalEncoder encoder, int sizeX, int sizeY, int sizeZ, int nb_nodes);
 Ciphertext weightedSum2D(double row, double col, vector<vector<Ciphertext> > &x, vector<vector<Plaintext> > &w, Evaluator evaluator);

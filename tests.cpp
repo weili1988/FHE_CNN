@@ -242,8 +242,8 @@ void monitor_test(string path, string source) {
 
 	saveCipher(res[0][0], path + "test.txt");*/
 }
-void CNN_test() {
-	string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
+void CNN_test(string path) {
+	//string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
 	string x0, w1, b1, w2, b2, fcW, fc_b;
 
 	x0.append(path);
@@ -252,9 +252,9 @@ void CNN_test() {
 	vector<vector<double> > input = readCSV(x0); // read MNIST number
 												 // Create encryption parameters
 	EncryptionParameters parms;
-	parms.set_poly_modulus("1x^4096 + 1");
-	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(4096));
-	parms.set_plain_modulus(1 << 24);
+	parms.set_poly_modulus("1x^8192 + 1");
+	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(8192));
+	parms.set_plain_modulus(1 << 30);
 	//parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
 	parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
 	parms.validate(); // parms.validate() is the end of parms creation
@@ -299,8 +299,8 @@ void CNN_test() {
 	}
 
 }
-void CNN_test_slim() {
-	string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
+void CNN_test_slim(string path) {
+	//
 	string x0, w1, b1, w2, b2, fcW, fc_b;
 
 	x0.append(path);
@@ -339,7 +339,7 @@ void CNN_test_slim() {
 	vector<vector<Ciphertext>> x = encrypt(input, encoder, encryptor); // encryption
 
 	cout << "CNN calculation: " << endl;
-	vector<Ciphertext> cnnEncrptRes = cnnCalMnist_slim(x, encoder, evaluator, decryptor); // calculation // !!!!!! remember to take out the decryptor after development is done!
+	vector<Ciphertext> cnnEncrptRes = cnnCalMnist_slim(x, encoder, evaluator, decryptor, path); // calculation // !!!!!! remember to take out the decryptor after development is done!
 
 	// Print size and noise budget of result. 
 	cout << "Size of weightedSum without relinearization: " << cnnEncrptRes[0].size() << endl;

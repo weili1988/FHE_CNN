@@ -1,9 +1,9 @@
 #include "SEAL_CNN.h"
 
-vector<Ciphertext> cnnCalMnist(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decryptor) { // remember to delete this decrypter after development done
+vector<Ciphertext> cnnCalMnist(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decryptor, string path) { // remember to delete this decrypter after development done
 	// This is server
 	// has encrypted x, encoder, evaluator, (and weights in server); output the vecotor (10 ciphter text) back to user who can decrypt the ciphertext back to plaintext
-	string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights";
+	//string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights";
 	string w1, b1, w2, b2, fcW, fc_b;
 	w1.append(path);
 	w1.append("/CNN1_W.txt");
@@ -56,10 +56,10 @@ vector<Ciphertext> cnnCalMnist(vector<vector<Ciphertext>> x, FractionalEncoder e
 	vector<Ciphertext> fcResult = fullyConnectCiphertext(flat, encodedFcW, encodedFcBias, evaluator, encoder, false); // no relu at last layer, no relin either
 	return fcResult;
 }
-vector<Ciphertext> cnnCalMnist_slim(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decryptor) { // remember to delete this decrypter after development done
+vector<Ciphertext> cnnCalMnist_slim(vector<vector<Ciphertext>> x, FractionalEncoder encoder, Evaluator evaluator, Decryptor decryptor, string path) { // remember to delete this decrypter after development done
 																																	// This is server
 																																	// has encrypted x, encoder, evaluator, (and weights in server); output the vecotor (10 ciphter text) back to user who can decrypt the ciphertext back to plaintext
-	string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
+	//string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
 	string w1, b1, w2, b2, fcW, fc_b;
 	w1.append(path);
 	w1.append("/CNN1_W.txt");
@@ -81,9 +81,9 @@ vector<Ciphertext> cnnCalMnist_slim(vector<vector<Ciphertext>> x, FractionalEnco
 	vector<vector<double> > fcWeight = readCSV(fcW);
 	vector<vector<double> > fc_bias = readCSV(fc_b);
 
+	//2 layers CNN3D + 1 FC
 	vector<vector<vector<vector<Plaintext> > > > converted_cnn1W = convertTensor(cnn1W, encoder, 3, 3, 1, 1); // convert to tensor with shape (8, 1, 3, 3) and finished encoding
 
-																											  //real test of 2 layers CNN3D + 1 FC
 	int nb_nodesCNN1W = 1;
 	int depth_cnn1W = 1;
 	vector<vector<vector<Ciphertext> > > input;

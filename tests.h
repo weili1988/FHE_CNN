@@ -13,8 +13,8 @@
 using namespace std;
 using namespace seal;
 
-void CNN_test();
-void CNN_test_slim();
+void CNN_test(string path);
+void CNN_test_slim(string path);
 int logitstic_regression();
 int testfullyConnect();
 
