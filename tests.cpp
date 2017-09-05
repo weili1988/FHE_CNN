@@ -309,9 +309,9 @@ void CNN_test_slim() {
 	vector<vector<double> > input = readCSV(x0); // read MNIST number
 	// Create encryption parameters
 	EncryptionParameters parms;
-	parms.set_poly_modulus("1x^4096 + 1"); // 8192 works
-	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(4096)); //8192 works
-	parms.set_plain_modulus(1 << 8); // 1 << 30 works
+	parms.set_poly_modulus("1x^8192 + 1"); // 8192 works
+	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(8192)); //8192 works
+	parms.set_plain_modulus(1 << 28); // 1 << 30 works
 	//parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
 	parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
 	parms.validate(); // parms.validate() is the end of parms creation
@@ -329,7 +329,7 @@ void CNN_test_slim() {
 	64 coefficients of the polynomial for the integral part (low-degree terms) and expand the
 	fractional part to 32 terms of precision (base 3) (high-degree terms).
 	*/
-	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 32, 2);
+	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 16, 2);
 	// Create encryptor, evaluator, decryptor
 	Encryptor encryptor(parms, public_key);
 	Evaluator evaluator(parms, evaluation_keys);
