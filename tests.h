@@ -14,7 +14,7 @@ using namespace std;
 using namespace seal;
 
 void CNN_test(string path);
-void CNN_test_slim(string path);
+void CNN_test_slim(string path, int digit);
 int logitstic_regression();
 int testfullyConnect();
 

@@ -243,7 +243,7 @@ void monitor_test(string path, string source) {
 	saveCipher(res[0][0], path + "test.txt");*/
 }
 void CNN_test(string path) {
-	//string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
+	
 	string x0, w1, b1, w2, b2, fcW, fc_b;
 
 	x0.append(path);
@@ -282,7 +282,7 @@ void CNN_test(string path) {
 	vector<vector<Ciphertext>> x = encrypt(input, encoder, encryptor); // encryption
 
 	cout << "CNN calculation: " << endl;
-	vector<Ciphertext> cnnEncrptRes = cnnCalMnist(x, encoder, evaluator, decryptor); // calculation // !!!!!! remember to take out the decryptor after development is done!
+	vector<Ciphertext> cnnEncrptRes = cnnCalMnist(x, encoder, evaluator, decryptor, path); // calculation // !!!!!! remember to take out the decryptor after development is done!
 
 																					 // Print size and noise budget of result. 
 	cout << "Size of weightedSum without relinearization: " << cnnEncrptRes[0].size() << endl;
@@ -299,12 +299,18 @@ void CNN_test(string path) {
 	}
 
 }
-void CNN_test_slim(string path) {
+void CNN_test_slim(string path, int digit) {
 	//
 	string x0, w1, b1, w2, b2, fcW, fc_b;
 
 	x0.append(path);
-	x0.append("/2.csv");
+	x0.append("/");
+	x0.append(to_string(digit));
+	x0.append(".csv");
+
+	if (digit < 0 || digit > 9) {
+		cout << "wrong input: do not input digit outside of 0 - 9" << endl;
+	}
 
 	vector<vector<double> > input = readCSV(x0); // read MNIST number
 	// Create encryption parameters
@@ -346,15 +352,24 @@ void CNN_test_slim(string path) {
 	cout << "Noise budget in weightedSum without relinearization: " << decryptor.invariant_noise_budget(cnnEncrptRes[0]) << " bits" << endl;
 	// decrypt
 	vector<Plaintext> decryptedCnnRes;
+	vector<double> finalResults;
 	for (int i = 0; i < cnnEncrptRes.size(); i++) {
 		decryptedCnnRes.emplace_back(decryptor.decrypt(cnnEncrptRes[i]));
 	}
 	// decode
-	cout << "---------------- Final results: -------------------------" << endl;
+	cout << "------------------- Final results: -------------------------" << endl;
 	for (int i = 0; i < decryptedCnnRes.size(); i++) {
 		cout << encoder.decode(decryptedCnnRes[i]) << endl;
+		finalResults.emplace_back(encoder.decode(decryptedCnnRes[i]));
 	}
-
+	double max = finalResults.at(0);
+	int idx = 0;
+	for (int i = 1; i < finalResults.size(); i++) {
+		if (finalResults.at(i) > max) {
+			idx = i;
+		}
+	}
+	cout << "My prediction for this digit image is: " << to_string(idx) << endl;
 }
 void example_linear_regression()
 {

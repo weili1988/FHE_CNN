@@ -6,19 +6,26 @@
 #include "seal.h"
 #include "bigpoly.h"
 */
-
+#include <iostream>
+#include <string>
+#include <sstream>
 #include "tests.h"
 
 int main()
 {
 	// cnn test 8 nodes in 1st layer and 16 nodes in 2nd layer plus 1 FC
-	//string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test";
+	//string path = "./CNN_cpp/MNIST_CNN_weights";
 	//CNN_test(path);
 
 	// cnn test slim version 1 node on each CNN layer plus 1 FC
 	// this is path where weights and test data are stored, this path shall have cnn1W cnn1b; cnn2W, cnn2b, fcW and fcB together with. digit.csv
-	string path = "C:/Users/liw5/Downloads/self_learn/infosec/encryption_DL/FHE_MachineLearning/data/MNIST_CNN_weights_test"; 
-	CNN_test_slim(path);
+	string path = "./CNN_cpp/MNIST_CNN_weights"; 
+	cout << "assuming you have been using default folder, please enter the digit you want to predict, hit enter when done" << endl;
+	int digit; // choose a digit from 0 to 9
+	cin >> digit;
+	cout << "predicting digit:" << to_string(digit) << endl;
+
+	CNN_test_slim(path, digit);
 
     // Wait for ENTER before closing screen.
     cout << "Press ENTER to exit" << endl;
