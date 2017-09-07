@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include "seal.h"
+#include <cmath>
 #include <chrono>
 #include "CipherSaveLoad.h"
 #include "AveragePooling.h"
@@ -21,6 +22,9 @@ int testfullyConnect();
 void save_load_test(string path, string source);
 void average_pooling_test(string path);
 void monitor_test(string path, string source);
+// test the working range for fractional encoder/decoder
+bool ifDecodeCorrect(double number, FractionalEncoder encoder, double residue);
+void encode_test(string path);
 
 void print_example_banner(string title);
 void example_timing();
