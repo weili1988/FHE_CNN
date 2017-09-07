@@ -168,7 +168,7 @@ void monitor_test(string path, string source) {
 	64 coefficients of the polynomial for the integral part (low-degree terms) and expand the
 	fractional part to 32 terms of precision (base 3) (high-degree terms).
 	*/
-	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 1, 32, 3);
+	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 32, 2);
 	// Create encryptor, evaluator, decryptor
 	Encryptor encryptor(parms, public_key);
 	Evaluator evaluator(parms, evaluation_keys);
@@ -241,6 +241,82 @@ void monitor_test(string path, string source) {
 	ciphertextLoad2D(res, path);
 
 	saveCipher(res[0][0], path + "test.txt");*/
+}
+
+bool ifDecodeCorrect(double number, FractionalEncoder encoder, double residue) {
+	
+	//cout << "Encoding " << number << "..." << endl;
+	Plaintext testPlain = encoder.encode(number);
+	double dn = encoder.decode(testPlain);
+	cout << number << ": " << dn << endl;
+	if ((number > residue) && (abs(dn - number) > residue))
+		return false;
+	return true;
+}
+
+void encode_test(string path) {
+	EncryptionParameters parms;
+	parms.set_poly_modulus("1x^4096 + 1");
+	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(4096));
+	parms.set_plain_modulus(1 << 16);
+	//parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
+	parms.set_decomposition_bit_count(32); // this number needs to be small to decrease noise;
+	parms.validate(); // parms.validate() is the end of parms creation
+
+					  // Generate keys.
+	cout << "Generating keys ..." << endl;
+	KeyGenerator generator(parms);
+	generator.generate(4); // int parameter is the evaluation key count 
+	cout << "... key generation complete" << endl;
+	Ciphertext public_key = generator.public_key();
+	saveCipher(public_key, path + "/publickey.txt");
+	Plaintext secret_key = generator.secret_key();
+	savePlain(secret_key, path + "/secretkey.txt");
+	EvaluationKeys evaluation_keys = generator.evaluation_keys();
+	// encode
+	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 2, 16, 2);
+	// Create encryptor, evaluator, decryptor
+	Encryptor encryptor(parms, public_key);
+	Evaluator evaluator(parms, evaluation_keys);
+	Decryptor decryptor(parms, secret_key);
+
+	// test 1
+	//double base = 3;
+	//double power = 0;
+	//double residue = 1e-9;
+	//while (ifDecodeCorrect(pow(base, power), encoder, residue)) {
+	//	if (pow(base, power) < residue) {
+	//		cout << "Number is too small!" << endl;
+	//		break;
+	//	}
+	//	cout << "Encode/decode " << base << "^" << power << " correctly" << endl;
+	//	power--;
+	//}
+	//cout << "Encode/decode " << base << "^" << power << " incorrectly" << endl;
+
+	//test 2
+	double test = pow(3.0, -1.0);
+	Plaintext testPlain = encoder.encode(test);
+	savePlain(testPlain, path + "/plaintxt.txt");
+	cout << "encrypting 3^-1: " << endl;
+	Ciphertext x = Ciphertext(BigPolyArray());
+	encryptor.encrypt(testPlain, x); // encryption
+	cout << "Noise budget in encryption of 3^-1" << ": " << decryptor.invariant_noise_budget(x) << " bits" << endl;
+	saveCipher(x, path + "/ciphertxt.txt");
+	// multiply
+	cout << "Calculate square: " << endl;
+	Ciphertext x2 = Ciphertext(BigPolyArray());
+	x2 = evaluator.square(x);
+	saveCipher(x2, path + "/square_ciphertxt.txt");
+	cout << "Noise budget in encryption of x^2" << ": " << decryptor.invariant_noise_budget(x2) << " bits" << endl;
+	Plaintext dx2 = decryptor.decrypt(x2);
+	savePlain(dx2, path + "/square_plaintxt.txt");
+	cout << "Decrypt square plaintext: " << returnPlain(dx2) << endl;
+	double testsquare = encoder.decode(dx2);
+	cout << "Square: " << testsquare << endl;
+	cout << "True Square: " << test * test << endl;
+
+
 }
 void CNN_test(string path) {
 	
@@ -335,7 +411,7 @@ void CNN_test_slim(string path, int digit) {
 	64 coefficients of the polynomial for the integral part (low-degree terms) and expand the
 	fractional part to 32 terms of precision (base 3) (high-degree terms).
 	*/
-	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 16, 2);
+	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 32, 2);
 	// Create encryptor, evaluator, decryptor
 	Encryptor encryptor(parms, public_key);
 	Evaluator evaluator(parms, evaluation_keys);
@@ -1590,3 +1666,4 @@ void print_example_banner(string title)
 			<< endl;
 	}
 }
+
