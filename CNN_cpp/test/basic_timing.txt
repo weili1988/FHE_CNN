@@ -1,0 +1,15 @@
+Encryption parameters:
+{ poly_modulus: 1x^8192 + 1
+{ coeff_modulus: 3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC000001
+{ plain_modulus: 1073741824
+{ decomposition_bit_count: 16
+{ noise_standard_deviation: 3.19
+{ noise_max_deviation: 19.14
+
+Average encode: 701 microseconds
+Average encrypt: 27637 microseconds
+Average multiply: 75167 microseconds
+Average square: 68705 microseconds
+Average relinearize: 169995 microseconds
+Average decrypt: 14510 microseconds
+Average decode: 782 microseconds

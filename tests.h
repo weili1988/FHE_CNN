@@ -25,9 +25,9 @@ void monitor_test(string path, string source);
 // test the working range for fractional encoder/decoder
 bool ifDecodeCorrect(double number, FractionalEncoder encoder, double residue);
 void encode_test(string path);
+void timing_test(string path);
 
 void print_example_banner(string title);
-void example_timing();
 void example_basics();
 void example_weighted_average();
 void example_parameter_selection();

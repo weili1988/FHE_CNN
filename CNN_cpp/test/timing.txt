@@ -1,0 +1,14 @@
+Input size: W = 32 H = 24
+Encryption parameters:
+{ poly_modulus: 1x^8192 + 1
+{ coeff_modulus: 3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC000001
+{ plain_modulus: 1073741824
+{ decomposition_bit_count: 16
+{ noise_standard_deviation: 3.19
+{ noise_max_deviation: 19.14
+
+Fractional encoding: 530 MilliSeconds
+encrypting: 530 MilliSeconds
+Mimic CNN: 78728 MilliSeconds
+decrypting: 20479 MilliSeconds
+decoding: 815 MilliSeconds
