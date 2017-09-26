@@ -318,6 +318,262 @@ void encode_test(string path) {
 
 
 }
+
+void timing_test(string path)
+{
+	print_example_banner("Example: Timing of basic operations");
+
+
+	auto performance_test = [](EncryptionParameters &parms, string path)
+	{
+		auto poly_modulus = parms.poly_modulus();
+		auto coeff_modulus = parms.coeff_modulus();
+		auto plain_modulus = parms.plain_modulus();
+
+		// Generate keys.
+		KeyGenerator generator(parms);
+		generator.generate(4); // int parameter is the evaluation key count 
+		Ciphertext public_key = generator.public_key();
+		Plaintext secret_key = generator.secret_key();
+		EvaluationKeys evaluation_keys = generator.evaluation_keys();
+		FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 32, 2);
+		// Create encryptor, evaluator, decryptor
+		Encryptor encryptor(parms, public_key);
+		Evaluator evaluator(parms, evaluation_keys);
+		Decryptor decryptor(parms, secret_key);
+
+		chrono::microseconds time_encode_sum(0);
+		chrono::microseconds time_encrypt_sum(0);
+		chrono::microseconds time_multiply_sum(0);
+		chrono::microseconds time_square_sum(0);
+		chrono::microseconds time_relinearize_sum(0);
+		chrono::microseconds time_decrypt_sum(0);
+		chrono::microseconds time_decode_sum(0);
+
+		cout << "Encryption parameters:" << endl;
+		cout << "{ poly_modulus: " << poly_modulus.to_string() << endl;
+		cout << "{ coeff_modulus: " << coeff_modulus.to_string() << endl;
+		cout << "{ plain_modulus: " << plain_modulus.to_dec_string() << endl;
+		cout << "{ decomposition_bit_count: " << parms.decomposition_bit_count() << endl;
+		cout << "{ noise_standard_deviation: " << parms.noise_standard_deviation() << endl;
+		cout << "{ noise_max_deviation: " << parms.noise_max_deviation() << endl << endl;
+
+		// save to a txt file
+		string file = path + "basic_timing.txt";
+		ofstream outputFile(file);
+
+		outputFile << "Encryption parameters:" << endl;
+		outputFile << "{ poly_modulus: " << poly_modulus.to_string() << endl;
+		outputFile << "{ coeff_modulus: " << coeff_modulus.to_string() << endl;
+		outputFile << "{ plain_modulus: " << plain_modulus.to_dec_string() << endl;
+		outputFile << "{ decomposition_bit_count: " << parms.decomposition_bit_count() << endl;
+		outputFile << "{ noise_standard_deviation: " << parms.noise_standard_deviation() << endl;
+		outputFile << "{ noise_max_deviation: " << parms.noise_max_deviation() << endl << endl;
+
+		int count = 100;
+
+		cout << "Running tests ";
+		for (int i = 0; i < count; ++i)
+		{
+			auto time_start = chrono::high_resolution_clock::now();
+			auto tmp = (double)rand() / RAND_MAX;
+			auto plain1 = encoder.encode(tmp);
+			auto plain2 = encoder.encode(tmp + 1);
+			auto time_encoded = chrono::high_resolution_clock::now();
+			auto enc1 = encryptor.encrypt(plain1);
+			auto enc2 = encryptor.encrypt(plain2);
+			auto time_encrypted = chrono::high_resolution_clock::now();
+			auto enc_prod = evaluator.multiply(enc1, enc2);
+			auto time_multiplied = chrono::high_resolution_clock::now();
+			auto enc_square = evaluator.square(enc1);
+			auto time_squared = chrono::high_resolution_clock::now();
+			auto enc_relin_prod = evaluator.relinearize(enc_prod);
+			auto time_relinearized = chrono::high_resolution_clock::now();
+			auto plain_prod = decryptor.decrypt(enc_relin_prod);
+			auto time_decrypted = chrono::high_resolution_clock::now();
+			int32_t result = encoder.decode(plain_prod);
+			auto time_decoded = chrono::high_resolution_clock::now();
+
+			//// Check the result
+			//int correct_result = i * (i + 1);
+			//if (result != correct_result)
+			//{
+			//	cout << "Something went wrong (result " << result << " != " << correct_result << ")!" << endl;
+			//}
+
+			if (i % 10 == 0 && i > 0)
+			{
+				cout << ".";
+				cout.flush();
+			}
+
+			time_encode_sum += chrono::duration_cast<chrono::microseconds>(time_encoded - time_start);
+			time_encrypt_sum += chrono::duration_cast<chrono::microseconds>(time_encrypted - time_encoded);
+			time_multiply_sum += chrono::duration_cast<chrono::microseconds>(time_multiplied - time_encrypted);
+			time_square_sum += chrono::duration_cast<chrono::microseconds>(time_squared - time_multiplied);
+			time_relinearize_sum += chrono::duration_cast<chrono::microseconds>(time_relinearized - time_squared);
+			time_decrypt_sum += chrono::duration_cast<chrono::microseconds>(time_decrypted - time_relinearized);
+			time_decode_sum += chrono::duration_cast<chrono::microseconds>(time_decoded - time_decrypted);
+		}
+
+		cout << " done." << endl << endl;
+		cout.flush();
+
+		auto avg_encode = time_encode_sum.count() / (2 * count);
+		auto avg_encrypt = time_encrypt_sum.count() / (2 * count);
+		auto avg_multiply = time_multiply_sum.count() / count;
+		auto avg_square = time_square_sum.count() / count;
+		auto avg_relinearize = time_relinearize_sum.count() / count;
+		auto avg_decrypt = time_decrypt_sum.count() / count;
+		auto avg_decode = time_decode_sum.count() / count;
+
+		cout << "Average encode: " << avg_encode << " microseconds" << endl;
+		cout << "Average encrypt: " << avg_encrypt << " microseconds" << endl;
+		cout << "Average multiply: " << avg_multiply << " microseconds" << endl;
+		cout << "Average square: " << avg_square << " microseconds" << endl;
+		cout << "Average relinearize: " << avg_relinearize << " microseconds" << endl;
+		cout << "Average decrypt: " << avg_decrypt << " microseconds" << endl;
+		cout << "Average decode: " << avg_decode << " microseconds" << endl;
+
+		outputFile << "Average encode: " << avg_encode << " microseconds" << endl;
+		outputFile << "Average encrypt: " << avg_encrypt << " microseconds" << endl;
+		outputFile << "Average multiply: " << avg_multiply << " microseconds" << endl;
+		outputFile << "Average square: " << avg_square << " microseconds" << endl;
+		outputFile << "Average relinearize: " << avg_relinearize << " microseconds" << endl;
+		outputFile << "Average decrypt: " << avg_decrypt << " microseconds" << endl;
+		outputFile << "Average decode: " << avg_decode << " microseconds" << endl;
+	};
+
+	// Create encryption parameters
+	EncryptionParameters parms;
+	parms.set_poly_modulus("1x^8192 + 1");
+	parms.set_coeff_modulus(ChooserEvaluator::default_parameter_options().at(8192));
+	parms.set_plain_modulus(1 << 30);
+	//parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
+	parms.set_decomposition_bit_count(16); // this number needs to be small to decrease noise;
+	parms.validate(); // parms.validate() is the end of parms creation
+
+
+	performance_test(parms, path);
+	cout << endl;
+
+	// define the input 
+	int width = 32;
+	int height = 24;
+	vector<vector<double>> input(height, vector<double>(width, 0));
+	// Filled with random number [0,1]
+	for (int i = 0; i < input.size(); i++) {
+		for (int j = 0; j < input[0].size(); j++) {
+			input[i][j] = ((double)rand() / RAND_MAX);
+		}
+	}
+
+	print_example_banner("Example: Timing of Mimic CNN");
+
+	// Output to the screen
+	cout << "Input size: W = " << width << " H = " << height << endl;
+	cout << "Encryption parameters:" << endl;
+	cout << "{ poly_modulus: " << parms.poly_modulus().to_string() << endl;
+	cout << "{ coeff_modulus: " << parms.coeff_modulus().to_string() << endl;
+	cout << "{ plain_modulus: " << parms.plain_modulus().to_dec_string() << endl;
+	cout << "{ decomposition_bit_count: " << parms.decomposition_bit_count() << endl;
+	cout << "{ noise_standard_deviation: " << parms.noise_standard_deviation() << endl;
+	cout << "{ noise_max_deviation: " << parms.noise_max_deviation() << endl << endl;
+
+	// save to a txt file
+	string file = path + "timing.txt";
+	ofstream outputFile(file);
+
+	outputFile << "Input size: W = " << width << " H = " << height << endl;
+	outputFile << "Encryption parameters:" << endl;
+	outputFile << "{ poly_modulus: " << parms.poly_modulus().to_string() << endl;
+	outputFile << "{ coeff_modulus: " << parms.coeff_modulus().to_string() << endl;
+	outputFile << "{ plain_modulus: " << parms.plain_modulus().to_dec_string() << endl;
+	outputFile << "{ decomposition_bit_count: " << parms.decomposition_bit_count() << endl;
+	outputFile << "{ noise_standard_deviation: " << parms.noise_standard_deviation() << endl;
+	outputFile << "{ noise_max_deviation: " << parms.noise_max_deviation() << endl << endl;
+
+	// Generate keys.
+	cout << "Generating keys ..." << endl;
+	KeyGenerator generator(parms);
+	generator.generate(4); // int parameter is the evaluation key count 
+	cout << "... key generation complete" << endl;
+	Ciphertext public_key = generator.public_key();
+	Plaintext secret_key = generator.secret_key();
+	EvaluationKeys evaluation_keys = generator.evaluation_keys();
+	FractionalEncoder encoder(parms.plain_modulus(), parms.poly_modulus(), 16, 32, 2);
+	// Create encryptor, evaluator, decryptor
+	Encryptor encryptor(parms, public_key);
+	Evaluator evaluator(parms, evaluation_keys);
+	Decryptor decryptor(parms, secret_key);
+
+	
+
+	// timing
+	chrono::milliseconds time_encode(0);
+	chrono::milliseconds time_encrypt(0);
+	chrono::milliseconds time_CNN(0);
+	chrono::milliseconds time_decrypt(0);
+	chrono::milliseconds time_decode(0);
+
+	// mimic CNN inference
+	// temporary variables
+	vector<Plaintext> plainText{};
+	vector<Ciphertext> cipherText{};
+	cout << "encoding input: " << endl;
+	auto time_encode_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < input.size(); i++)
+		for (int j = 0; j < input[0].size(); j++) {
+			plainText.emplace_back(encoder.encode(input[i][j]));
+		}
+	auto time_encode_end = chrono::high_resolution_clock::now();
+	time_encode = chrono::duration_cast<chrono::milliseconds>(time_encode_end - time_encode_start);
+	cout << time_encode.count() << " MilliSeconds" << endl;
+	outputFile << "Fractional encoding: " << time_encode.count() << " MilliSeconds" << endl;
+
+	cout << "encrypting input: " << endl;
+	auto time_encrypt_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < (input.size() * input[0].size() - 1); i++) {
+		cipherText.emplace_back(encryptor.encrypt(plainText[i]));
+	}
+	auto time_encrypt_end = chrono::high_resolution_clock::now();
+	time_encrypt = chrono::duration_cast<chrono::milliseconds>(time_encrypt_end - time_encrypt_start);
+	cout << time_encode.count() << " MilliSeconds" << endl;
+	outputFile << "encrypting: " << time_encode.count() << " MilliSeconds" << endl;
+
+	cout << "Simulating CNN: " << endl;
+	auto time_CNN_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < ( input.size() * input[0].size() -1 ) ; i++) {
+		cipherText[i] = evaluator.multiply_plain(cipherText[i], encoder.encode(0.5));
+		cipherText[i] = evaluator.square(cipherText[i]);
+	}
+	auto time_CNN_end = chrono::high_resolution_clock::now();
+	time_CNN = chrono::duration_cast<chrono::milliseconds>(time_CNN_end - time_CNN_start);
+	cout << time_CNN.count() << " MilliSeconds" << endl;
+	outputFile << "Mimic CNN: " << time_CNN.count() << " MilliSeconds" << endl;
+
+	cout << "decrypting output: " << endl;
+	auto time_decrypt_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < (input.size() * input[0].size() - 1); i++) {
+		plainText[i] = decryptor.decrypt(cipherText[i]);
+	}
+	auto time_decrypt_end = chrono::high_resolution_clock::now();
+	time_decrypt = chrono::duration_cast<chrono::milliseconds>(time_decrypt_end - time_decrypt_start);
+	cout << time_decrypt.count() << " MilliSeconds" << endl;
+	outputFile << "decrypting: " << time_decrypt.count() << " MilliSeconds" << endl;
+
+	cout << "decoding output: " << endl;
+	auto time_decode_start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < (input.size() * input[0].size() - 1); i++) {
+		double output = encoder.decode(plainText[i]);
+	}
+	auto time_decode_end = chrono::high_resolution_clock::now();
+	time_decode = chrono::duration_cast<chrono::milliseconds>(time_decode_end - time_decode_start);
+	cout << time_decode.count() << " MilliSeconds" << endl;
+	outputFile << "decoding: " << time_decode.count() << " MilliSeconds" << endl;
+
+}
+
 void CNN_test(string path) {
 	
 	string x0, w1, b1, w2, b2, fcW, fc_b;
@@ -354,25 +610,61 @@ void CNN_test(string path) {
 	Evaluator evaluator(parms, evaluation_keys);
 	Decryptor decryptor(parms, secret_key);
 
+	// timing
+	chrono::milliseconds time_encrypt(0);
+	chrono::milliseconds time_CNN(0);
+	chrono::milliseconds time_decrypt(0);
+	chrono::milliseconds time_decode(0);
+
 	cout << "encrypting x: " << endl;
+	auto time_encrypt_start = chrono::high_resolution_clock::now();
 	vector<vector<Ciphertext>> x = encrypt(input, encoder, encryptor); // encryption
+	auto time_encrypt_end = chrono::high_resolution_clock::now();
 
 	cout << "CNN calculation: " << endl;
+	auto time_CNN_start = chrono::high_resolution_clock::now();
 	vector<Ciphertext> cnnEncrptRes = cnnCalMnist(x, encoder, evaluator, decryptor, path); // calculation // !!!!!! remember to take out the decryptor after development is done!
+	auto time_CNN_end = chrono::high_resolution_clock::now();
 
 																					 // Print size and noise budget of result. 
 	cout << "Size of weightedSum without relinearization: " << cnnEncrptRes[0].size() << endl;
 	cout << "Noise budget in weightedSum without relinearization: " << decryptor.invariant_noise_budget(cnnEncrptRes[0]) << " bits" << endl;
 	// decrypt
 	vector<Plaintext> decryptedCnnRes;
+	auto time_decrypt_start = chrono::high_resolution_clock::now();
 	for (int i = 0; i < cnnEncrptRes.size(); i++) {
 		decryptedCnnRes.emplace_back(decryptor.decrypt(cnnEncrptRes[i]));
 	}
+	auto time_decrypt_end = chrono::high_resolution_clock::now();
 	// decode
 	cout << "---------------- Final results: -------------------------" << endl;
+	auto time_decode_start = chrono::high_resolution_clock::now();
 	for (int i = 0; i < decryptedCnnRes.size(); i++) {
 		cout << encoder.decode(decryptedCnnRes[i]) << endl;
 	}
+	auto time_decode_end = chrono::high_resolution_clock::now();
+
+	time_encrypt = chrono::duration_cast<chrono::milliseconds>(time_encrypt_end - time_encrypt_start);
+	time_CNN = chrono::duration_cast<chrono::milliseconds>(time_CNN_end - time_CNN_start);
+	time_decrypt = chrono::duration_cast<chrono::milliseconds>(time_decrypt_end - time_decrypt_start);
+	time_decode = chrono::duration_cast<chrono::milliseconds>(time_decode_end - time_decode_start);
+
+
+	// save to a txt file
+	string file = "./CNN_cpp/test/CNNtiming.txt";
+	ofstream outputFile(file);
+	outputFile << "Encryption parameters:" << endl;
+	outputFile << "{ poly_modulus: " << parms.poly_modulus().to_string() << endl;
+	outputFile << "{ coeff_modulus: " << parms.coeff_modulus().to_string() << endl;
+	outputFile << "{ plain_modulus: " << parms.plain_modulus().to_dec_string() << endl;
+	outputFile << "{ decomposition_bit_count: " << parms.decomposition_bit_count() << endl;
+	outputFile << "{ noise_standard_deviation: " << parms.noise_standard_deviation() << endl;
+	outputFile << "{ noise_max_deviation: " << parms.noise_max_deviation() << endl << endl;
+
+	outputFile << "encode/encrypt: " << time_encrypt.count() << " milliseconds" << endl;
+	outputFile << "CNN: " << time_CNN.count() << " milliseconds" << endl;
+	outputFile << "decrypt: " << time_decrypt.count() << " milliseconds" << endl;
+	outputFile << "decode: " << time_decode.count() << " milliseconds" << endl;
 
 }
 void CNN_test_slim(string path, int digit) {
